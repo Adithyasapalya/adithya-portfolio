@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { ArrowDown, ArrowUpRight, Menu, X } from "lucide-react";
 import "./App.css";
+import profileImage from "./assets/profile.jpeg";
 
 const navItems = [
   { label: "About", id: "about" },
@@ -228,8 +229,14 @@ function App() {
         <div className="about-intro">
           <div className="about-image-wrap">
             <div className="about-image-placeholder">
+              <img
+                src={profileImage}
+                alt="Adithya Sapalya"
+                className="about-image"
+              />
+
               <span>IMAGE / 001</span>
-              <span>IDENTITY LOADING...</span>
+              <span>ADITHYA / AIML ENGINEER</span>
             </div>
 
             <div className="about-image-corner corner-tl" />
@@ -257,7 +264,7 @@ function App() {
             <p className="about-role">
               ARTIFICIAL INTELLIGENCE
               <br />
-              & MACHINE LEARNING ENGINEER
+              & MACHINE LEARNING ENGINEER.
             </p>
 
             <p className="about-description">
@@ -455,7 +462,7 @@ function App() {
 
           <p>
             Here's the complete profile — education, experience,
-            certifications, leadership, and technical skills.
+            certifications, leadership, technical skills and more.
           </p>
 
           <div className="resume-actions">
