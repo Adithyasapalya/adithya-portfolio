@@ -1,193 +1,867 @@
-import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUpRight, Menu, X, Github, Linkedin, Mail } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { ArrowDown, ArrowUpRight, Mail } from "lucide-react";
+import { GithubIcon, LinkedinIcon } from "./components/SocialIcons";
+import { CarModelViewer } from "./components/CarModelViewer";
+import profileImg from "./assets/profile.jpeg";
 import "./App.css";
 
-const navItems = [
-  { label: "Home", id: "home" },
-  { label: "About", id: "about" },
-  { label: "Skills", id: "skills" },
-  { label: "Projects", id: "projects" },
-  { label: "Experience", id: "experience" },
-  { label: "Resume", id: "resume" },
-  { label: "Contact", id: "contact" },
-];
+export default function App() {
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    company: "",
+    subject: "",
+    message: "",
+  });
 
-const skillGroups = [
-  { number: "01", name: "AI / MACHINE LEARNING", summary: "Building models that learn from data and support real decisions.", tools: ["Python", "NumPy", "Pandas", "Scikit-learn", "Deep Learning"] },
-  { number: "02", name: "GENERATIVE AI & LLMs", summary: "Designing grounded, useful applications around language models.", tools: ["LLMs", "Prompt Engineering", "RAG", "Embeddings", "FAISS"] },
-  { number: "03", name: "AGENTIC SYSTEMS", summary: "Connecting reasoning, tools, and workflows into practical systems.", tools: ["LangChain", "LangGraph", "Tool Calling", "Orchestration", "Automation"] },
-  { number: "04", name: "APPLICATION ENGINEERING", summary: "Turning prototypes into interfaces and services people can use.", tools: ["FastAPI", "Streamlit", "SQL", "Git", "React basics"] },
-];
-
-const projects = [
-  { number: "01", name: "URBANROOF AI DDR", type: "DOCUMENT INTELLIGENCE", description: "Analyzes inspection and thermal reports, consolidates defects, and generates structured diagnosis reports with semantic search and LLM reasoning.", stack: "PyMuPDF · Embeddings · FAISS · LLMs · DOCX" },
-  { number: "02", name: "AI FINANCIAL INTELLIGENCE", type: "DATA + AI", description: "An interactive market dashboard combining financial indicators, trend analysis, news sentiment, and currency conversion.", stack: "Python · Streamlit · yfinance · Plotly · Ollama" },
-  { number: "03", name: "CYBERSEC ASSISTANT", type: "SECURITY + LLMs", description: "A local-first assistant concept for exploring cybersecurity knowledge, threat frameworks, and security guidance.", stack: "Python · LLMs · PEFT/LoRA · OWASP · MITRE" },
-  { number: "04", name: "SMART SURVEILLANCE", type: "COMPUTER VISION", description: "A computer-vision project focused on interpreting visual input and supporting automated monitoring workflows.", stack: "Python · Computer Vision · Deep Learning" },
-  { number: "05", name: "ECOMMERCE SENTIMENT", type: "NLP", description: "Classifies customer sentiment from text to turn unstructured feedback into useful product insights.", stack: "Python · NLP · Machine Learning" },
-  { number: "06", name: "SMART ATTENDANCE", type: "COMPUTER VISION", description: "An attendance workflow concept using visual recognition to reduce repetitive manual tracking.", stack: "Python · Computer Vision · Automation" },
-];
-
-function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
-  const [revealedSkills, setRevealedSkills] = useState(false);
-  const closeMenu = () => setMenuOpen(false);
-
-  useEffect(() => {
-    const sections = navItems
-      .map(({ id }) => document.getElementById(id))
-      .filter((section): section is HTMLElement => section !== null);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActiveSection(visible.target.id);
-      },
-      { rootMargin: "-28% 0px -52% 0px", threshold: [0, 0.1, 0.25, 0.5] }
-    );
-    sections.forEach((section) => observer.observe(section));
-
-    const skillSection = document.getElementById("skills");
-    const skillObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setRevealedSkills(true);
-      },
-      { threshold: 0.18 }
-    );
-    if (skillSection) skillObserver.observe(skillSection);
-
-    return () => {
-      observer.disconnect();
-      skillObserver.disconnect();
-    };
-  }, []);
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      return;
+    }
+    setFormSubmitted(true);
+  };
 
   return (
-    <main>
+    <div className="app-container">
+      {/* =========================================================
+          01. FIXED NAVBAR (INLINE MENU ITEMS, NO HAMBURGER, NO AVAILABILITY)
+          ========================================================= */}
       <header className="navbar">
-        <a href="#home" className="brand" onClick={closeMenu}>ADITHYA<span>.exe</span></a>
+        <a href="#hero" className="nav-brand">
+          ADITHYA<span>.exe</span>
+        </a>
 
-        <nav className="desktop-nav" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              className={`desktop-nav-link ${activeSection === item.id ? "active" : ""}`}
-              onClick={closeMenu}
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav className="navbar-links" aria-label="Main navigation">
+          <a href="#about" className="nav-link">ABOUT</a>
+          <a href="#skills" className="nav-link">SKILLS</a>
+          <a href="#projects" className="nav-link">PROJECTS</a>
+          <a href="#blogs" className="nav-link">BLOGS</a>
+          <a href="#experience" className="nav-link">EXPERIENCE</a>
+          <a href="#resume" className="nav-link">RESUME</a>
+          <a href="#contact" className="nav-link">CONTACT</a>
         </nav>
-
-        <div className="nav-right">
-          <span className="availability"><span className="status-dot" />AVAILABLE FOR OPPORTUNITIES</span>
-          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen}>
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-            <span>{menuOpen ? "CLOSE" : "MENU"}</span>
-          </button>
-        </div>
       </header>
 
-      {menuOpen && (
-        <nav className="menu-overlay" aria-label="Mobile navigation">
-          <div className="menu-heading">NAVIGATION / 01—07</div>
-          {navItems.map((item, index) => (
-            <a key={item.id} href={`#${item.id}`} onClick={closeMenu} className={`menu-link ${activeSection === item.id ? "active" : ""}`}>
-              <span className="menu-number">0{index + 1}</span><span>{item.label}</span><ArrowUpRight className="menu-arrow" size={24} />
+      {/* =========================================================
+          02. HERO SECTION
+          ========================================================= */}
+      <section className="hero-section" id="hero">
+        <div className="hero-top-labels">
+          <span>PORTFOLIO / 2026</span>
+          <span className="hidden sm:inline">AI · ML · GENAI · AGENTIC SYSTEMS · AUTOMATION</span>
+        </div>
+
+        <div className="hero-main">
+          <div>
+            <div className="hero-intro-label">
+              <span className="red-indicator" />
+              <span>AIML ENGINEER</span>
+            </div>
+
+            <h1 className="hero-heading">
+              ENGINEERING<br />
+              THE <span className="outline-yellow">UNSEEN.</span>
+            </h1>
+
+            <p className="hero-description">
+              I'm Adithya Sapalya — an AIML engineer exploring intelligent systems, generative AI, and autonomous agents to build solutions for real-world problems.
+            </p>
+
+            <a href="#about" className="btn-primary">
+              <span>MEET THE ENGINEER</span>
+              <ArrowUpRight size={16} />
             </a>
-          ))}
-        </nav>
-      )}
+          </div>
 
-      <section className="hero" id="home">
-        <div className="hero-topline"><span>PORTFOLIO / 2026</span><span>AI · ML · GENAI · AGENTIC SYSTEMS · AUTOMATION</span></div>
-        <div className="hero-content">
-          <div className="hero-kicker"><span className="red-line" />AIML ENGINEER</div>
-          <h1>ENGINEERING<br />THE <span className="outline-text">UNSEEN.</span></h1>
-          <div className="hero-bottom">
-            <p className="hero-description">I'm Adithya Sapalya — an AIML engineer exploring intelligent systems, generative AI, and autonomous agents to build solutions for real-world problems.</p>
-            <a href="#projects" className="explore-button"><span>EXPLORE MY WORK</span><span className="button-icon"><ArrowUpRight size={20} /></span></a>
+          {/* Right Hero: 3D Streamliner Model Viewer */}
+          <CarModelViewer />
+        </div>
+
+        <a href="#about" className="hero-bottom-scroll">
+          <span>SCROLL TO EXPLORE</span>
+          <ArrowDown size={14} />
+        </a>
+      </section>
+
+      {/* =========================================================
+          03. ABOUT SECTION (SAPALYA IN YELLOW OUTLINE)
+          ========================================================= */}
+      <section className="content-chapter" id="about">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>02 / IDENTITY</span>
+          </div>
+          <span>ADITHYA ASHOK SAPALYA</span>
+        </div>
+
+        <div className="about-grid">
+          {/* Left: Portrait image container */}
+          <div className="portrait-frame-wrapper">
+            <div className="portrait-frame">
+              <span className="corner-reticle cr-tl" />
+              <span className="corner-reticle cr-tr" />
+              <span className="corner-reticle cr-bl" />
+              <span className="corner-reticle cr-br" />
+
+              <img src={profileImg} alt="Adithya Ashok Sapalya" />
+            </div>
+            <div className="portrait-identity-label">
+              <span>ID // ADITHYA_ASHOK_SAPALYA</span>
+              <span>VCET // 2026</span>
+            </div>
+          </div>
+
+          {/* Right: Bio & Role */}
+          <div className="about-content-right">
+            <span className="section-kicker">WHO IS ADITHYA?</span>
+            <h2 className="chapter-heading">
+              ADITHYA<br />
+              <span className="outline-yellow">SAPALYA.</span>
+            </h2>
+
+            <div className="about-role-title">
+              ARTIFICIAL INTELLIGENCE & MACHINE LEARNING ENGINEER
+            </div>
+
+            <p className="body-text">
+              I build practical AI systems around machine learning, generative AI, LLMs, RAG, and agentic workflows — turning ideas into systems that can reason, automate, and solve real-world problems.
+            </p>
+
+            <p className="body-text" style={{ marginTop: "16px" }}>
+              My work spans from structured machine learning workflows and deep learning to agent orchestration with LangGraph, local quantized LLMs via Ollama, and full-stack integration with Go, Python, FastAPI, and React.
+            </p>
+
+            <a href="#skills" className="about-transition-indicator">
+              <span>KEEP GOING / THERE'S MORE</span>
+              <ArrowDown size={14} color="#FF3138" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
+          04. SKILLS SECTION (BALANCED 4-COLUMN + UNIFORM 2x2 ARSENAL MATRIX)
+          ========================================================= */}
+      <section className="content-chapter" id="skills">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>03 / CAPABILITIES</span>
+          </div>
+          <span>THE TOOLSET</span>
+        </div>
+
+        <h2 className="chapter-heading">
+          BUILDING<br />
+          INTELLIGENCE.
+        </h2>
+
+        {/* 4 Skill Categories Balanced Grid */}
+        <div className="skills-grid-categories">
+          <div className="skill-category-card">
+            <span className="category-num">01 —</span>
+            <h3 className="category-name">INTELLIGENCE</h3>
+            <ul className="category-skill-items">
+              <li>Machine Learning</li>
+              <li>Deep Learning</li>
+              <li>NLP</li>
+              <li>Computer Vision</li>
+            </ul>
+          </div>
+
+          <div className="skill-category-card">
+            <span className="category-num">02 —</span>
+            <h3 className="category-name">GENERATIVE AI</h3>
+            <ul className="category-skill-items">
+              <li>Generative AI</li>
+              <li>LLMs</li>
+              <li>RAG</li>
+              <li>Prompt Engineering</li>
+            </ul>
+          </div>
+
+          <div className="skill-category-card">
+            <span className="category-num">03 —</span>
+            <h3 className="category-name">AGENTIC SYSTEMS</h3>
+            <ul className="category-skill-items">
+              <li>Agentic AI</li>
+              <li>AI Agents</li>
+              <li>Multi-Agent Workflows</li>
+              <li>AI Automation</li>
+            </ul>
+          </div>
+
+          <div className="skill-category-card">
+            <span className="category-num">04 —</span>
+            <h3 className="category-name">ENGINEERING</h3>
+            <ul className="category-skill-items">
+              <li>Python</li>
+              <li>Go</li>
+              <li>C</li>
+              <li>Java</li>
+              <li>HTML</li>
+              <li>CSS</li>
+            </ul>
           </div>
         </div>
 
-        <div className="hero-visual" aria-hidden="true">
-          <div className="signal-caption signal-caption-top">SYSTEM / 001 <span>ONLINE</span></div>
-          <div className="signal-plate">
-            <div className="signal-grid" />
-            <div className="signal-axis signal-axis-x" /><div className="signal-axis signal-axis-y" />
-            <svg className="signal-trace" viewBox="0 0 520 360" fill="none" preserveAspectRatio="xMidYMid meet">
-              <path className="trace-shadow" d="M18 258H98L128 258L154 218L178 285L207 116L238 240L267 178L293 208H336L365 151L394 151L420 84L448 84L472 121L502 121" />
-              <path className="trace-main" d="M18 258H98L128 258L154 218L178 285L207 116L238 240L267 178L293 208H336L365 151L394 151L420 84L448 84L472 121L502 121" />
-              <path className="trace-secondary" d="M18 294H125L155 278H205L230 302H315L350 267H405L433 286H502" />
-            </svg>
-            <span className="signal-point point-a" /><span className="signal-point point-b" /><span className="signal-point point-c" />
-            <span className="signal-readout readout-a">INPUT <b>DATA</b></span>
-            <span className="signal-readout readout-b">MODEL <b>ACTIVE</b></span>
-            <span className="signal-stamp">A / S</span>
+        {/* Balanced 2x2 Arsenal Matrix: Single Uniform Yellow Accent & Pattern */}
+        <div className="skills-matrix-container">
+          {/* Card 01 */}
+          <div className="matrix-group-card">
+            <div className="matrix-group-header">
+              <span>01 // AI & MACHINE LEARNING</span>
+              <span className="matrix-tag-uniform">ACTIVE</span>
+            </div>
+            <div className="matrix-chips-grid">
+              {["Scikit-learn", "Pandas", "NumPy", "MATLAB", "Simulink"].map((tool) => (
+                <span key={tool} className="tech-chip">
+                  {tool}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="signal-caption signal-caption-bottom"><span>FROM DATA</span><span className="caption-rule" /><span>TO INTELLIGENCE</span></div>
+
+          {/* Card 02 */}
+          <div className="matrix-group-card">
+            <div className="matrix-group-header">
+              <span>02 // GENAI & AGENTIC STACK</span>
+              <span className="matrix-tag-uniform">ACTIVE</span>
+            </div>
+            <div className="matrix-chips-grid">
+              {[
+                "LangChain",
+                "LangGraph",
+                "FAISS",
+                "Ollama",
+                "Llama 3",
+                "OpenAI API",
+                "MiroFish",
+                "Hermes Agent",
+              ].map((tool) => (
+                <span key={tool} className="tech-chip">
+                  {tool}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 03 */}
+          <div className="matrix-group-card">
+            <div className="matrix-group-header">
+              <span>03 // LANGUAGES & INFRASTRUCTURE</span>
+              <span className="matrix-tag-uniform">ACTIVE</span>
+            </div>
+            <div className="matrix-chips-grid">
+              {["Python", "Go", "C", "Java", "SQL", "FastAPI", "Streamlit", "Git", "GitHub"].map((tool) => (
+                <span key={tool} className="tech-chip">
+                  {tool}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 04 */}
+          <div className="matrix-group-card">
+            <div className="matrix-group-header">
+              <span>04 // VISUAL & DATA TOOLS</span>
+              <span className="matrix-tag-uniform">ACTIVE</span>
+            </div>
+            <div className="matrix-chips-grid">
+              {["Power BI", "Tableau", "PowerPoint", "Canva", "Picsart"].map((tool) => (
+                <span key={tool} className="tech-chip">
+                  {tool}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
+          05. MYSTERY TRANSITION SECTION
+          ========================================================= */}
+      <section className="mystery-section" id="unknown">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>04 / UNKNOWN</span>
+          </div>
+          <span>DATA FOUND</span>
         </div>
 
-        <a href="#about" className="scroll-indicator"><span>SCROLL TO EXPLORE</span><ArrowDown size={16} /></a>
-      </section>
+        <div className="mystery-main">
+          <div className="mystery-kicker">YOU KNOW THE TOOLS.</div>
+          <h2 className="mystery-heading">
+            <span className="mystery-white">BUT...</span><br />
+            <span className="mystery-blue">WHAT DID I</span><br />
+            <span className="mystery-build-outline">BUILD</span>
+            <span className="mystery-red-marks">??</span>
+          </h2>
+        </div>
 
-      <section className="content-section about-section" id="about">
-        <div className="section-topline"><span>01 / ABOUT</span><span>THE PERSON BEHIND THE SYSTEMS</span></div>
-        <div className="about-layout">
-          <div className="section-heading-block"><span className="section-kicker"><span className="red-line" />A LITTLE CONTEXT</span><h2>CURIOUS BY<br /><span className="outline-text">DESIGN.</span></h2></div>
-          <div className="about-copy"><p className="about-lead">I’m Adithya Sapalya, an Artificial Intelligence and Machine Learning engineer interested in building practical intelligent systems.</p><p>I enjoy working across the stack — from data and model workflows to LLM-powered applications, retrieval systems, and agents that connect tools to real tasks. I care about understanding how things work, making ideas usable, and learning by building.</p><div className="about-focus"><span>MY FOCUS</span><div>AI / ML</div><div>GENERATIVE AI</div><div>AGENTIC SYSTEMS</div><div>AUTOMATION</div></div></div>
+        <div className="mystery-bottom-text">
+          <a href="#projects" className="hero-bottom-scroll" style={{ padding: 0 }}>
+            <span>SCROLL TO FIND OUT</span>
+            <ArrowDown size={14} />
+          </a>
         </div>
       </section>
 
-      <section className={`content-section skills-section ${revealedSkills ? "skills-revealed" : ""}`} id="skills">
-        <div className="section-topline"><span>02 / TECHNICAL STACK</span><span>CAPABILITIES → IMPLEMENTATION</span></div>
-        <div className="skills-heading-row"><div><span className="section-kicker"><span className="red-line" />TOOLS ARE ONLY THE START</span><h2>SKILLS THAT<br /><span className="outline-text">SHIP.</span></h2></div><p className="skills-intro">A practical toolkit for moving from a problem statement to a working AI application.</p></div>
-        <div className="skills-list">
-          {skillGroups.map((group) => (
-            <article className="skill-row" key={group.number}>
-              <span className="skill-number">{group.number}</span>
-              <div className="skill-capability"><h3>{group.name}</h3><p>{group.summary}</p></div>
-              <div className="skill-tools" aria-label={`${group.name} tools`}>{group.tools.map((tool) => <span key={tool}>{tool}</span>)}</div>
-              <ArrowUpRight className="skill-arrow" size={21} />
-            </article>
-          ))}
+      {/* =========================================================
+          06. PROJECTS SECTION
+          ========================================================= */}
+      <section className="content-chapter" id="projects">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>05 / SYSTEMS</span>
+          </div>
+          <span>PROJECT ARCHIVE</span>
         </div>
-        <p className="skills-note">STACK EVOLVES. FUNDAMENTALS STAY.</p>
-      </section>
 
-      <section className="project-section" id="projects">
-        <div className="project-topline"><span>03 / SELECTED WORK</span><span>AI · DOCUMENT INTELLIGENCE · APPLICATIONS</span></div>
-        <div className="project-intro">
-          <div className="project-label"><span className="red-line" />PROJECTS / 001</div>
-          <h2>URBANROOF.</h2>
-          <p className="project-tagline">FROM INSPECTION DATA<br />TO INTELLIGENT DIAGNOSIS.</p>
-          <p className="project-description">An AI-powered building inspection system that analyzes inspection and thermal reports, consolidates defects, and generates structured diagnosis reports using semantic search and LLM reasoning.</p>
-          <a href="https://github.com/Adithyasapalya" target="_blank" rel="noreferrer" className="project-link">VIEW PROJECTS ON GITHUB<span><ArrowUpRight size={19} /></span></a>
+        <h2 className="chapter-heading">
+          THE WORK<br />
+          COMES NEXT.
+        </h2>
+
+        <div className="projects-container">
+          {/* Project 1 */}
+          <article className="project-card-technical">
+            <div className="project-card-header">
+              <span className="project-id-badge">PROJECT // 01</span>
+              <span className="project-category-badge">MULTI-AGENT & QUANT FINANCE</span>
+            </div>
+
+            <h3 className="project-title">
+              Chronos AI: AI-Powered Financial Analytics and Trading Simulation System
+            </h3>
+
+            <p className="project-description-text">
+              An AI-powered multi-agent trading and financial analytics platform built using MiroFish and Hermes Agent for stock prediction, sentiment analysis, and autonomous investment recommendations. Features interactive candlestick charts, RSI indicators, bull/bear detection, real-time news intelligence, and local LLM financial reasoning with Ollama and Llama3.
+            </p>
+
+            <div className="project-stack-row">
+              {[
+                "MiroFish",
+                "Hermes Agent",
+                "Python",
+                "Streamlit",
+                "Ollama",
+                "Llama3",
+                "yFinance",
+                "Plotly",
+                "Scikit-learn",
+                "NewsAPI",
+                "TextBlob",
+              ].map((item) => (
+                <span key={item} className="project-tech-tag">
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="project-actions-row">
+              <a
+                href="https://github.com/Adithyasapalya/mango-sorbet"
+                target="_blank"
+                rel="noreferrer"
+                className="project-link-btn"
+              >
+                <span>View on GitHub</span>
+                <ArrowUpRight size={14} />
+              </a>
+            </div>
+          </article>
+
+          {/* Project 2 */}
+          <article className="project-card-technical">
+            <div className="project-card-header">
+              <span className="project-id-badge">PROJECT // 02</span>
+              <span className="project-category-badge">KSCST SPP 49TH SERIES RECOGNIZED</span>
+            </div>
+
+            <h3 className="project-title">
+              CYBERSEC: AI Powered Red Teaming Assistant
+            </h3>
+
+            <p className="project-description-text">
+              A project that leverages a fine-tuned large language model (LLM), trained on structured cybersecurity datasets. Selected for KSCST SPP 49th Series (Reference ID: 49S_BE_6839). Integrates TinyLLM with Nmap and Nikto to automate vulnerability scanning, risk prioritization via MITRE ATT&CK and OWASP Top 10, and a RAG pipeline to enrich scans with CVE references and actionable remediation playbooks.
+            </p>
+
+            <div className="project-stack-row">
+              {[
+                "Python",
+                "TinyLLM",
+                "Ollama",
+                "RAG",
+                "Nmap",
+                "Nikto",
+                "FAISS",
+                "MITRE ATT&CK",
+                "OWASP Top 10",
+              ].map((item) => (
+                <span key={item} className="project-tech-tag">
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="project-actions-row">
+              <a
+                href="https://github.com/Adithyasapalya"
+                target="_blank"
+                rel="noreferrer"
+                className="project-link-btn"
+              >
+                <span>View on GitHub</span>
+                <ArrowUpRight size={14} />
+              </a>
+            </div>
+          </article>
+
+          {/* Project 3 */}
+          <article className="project-card-technical">
+            <div className="project-card-header">
+              <span className="project-id-badge">PROJECT // 03</span>
+              <span className="project-category-badge">COMPUTER VISION & BIOMETRICS</span>
+            </div>
+
+            <h3 className="project-title">
+              Smart Surveillance System using AI
+            </h3>
+
+            <p className="project-description-text">
+              A smart face recognition surveillance system for real-time security and monitoring applications. Uses advanced neural models including FaceNet, DeepFace, and ArcFace combined with MediaPipe to execute high-accuracy real-time facial localization and identification across both live camera feeds and stored video archives.
+            </p>
+
+            <div className="project-stack-row">
+              {["Python", "Droid Cam", "MediaPipe", "FaceNet", "DeepFace", "ArcFace"].map((item) => (
+                <span key={item} className="project-tech-tag">
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="project-actions-row">
+              <a
+                href="https://github.com/Adithyasapalya"
+                target="_blank"
+                rel="noreferrer"
+                className="project-link-btn"
+              >
+                <span>View on GitHub</span>
+                <ArrowUpRight size={14} />
+              </a>
+            </div>
+          </article>
         </div>
-        <div className="project-visual"><div className="project-visual-grid" /><div className="scan-frame"><div className="scan-corner top-left" /><div className="scan-corner top-right" /><div className="scan-corner bottom-left" /><div className="scan-corner bottom-right" /><div className="scan-building"><div className="building-layer layer-one" /><div className="building-layer layer-two" /><div className="building-layer layer-three" /><div className="scan-line" /></div><span className="scan-tag tag-top">THERMAL ANALYSIS / ACTIVE</span><span className="scan-tag tag-bottom">DEFECT DETECTION / 01</span></div><div className="project-side-note"><span>PROCESSING</span><span className="side-note-line" /><span>INSPECTION DATA</span></div></div>
-        <div className="pipeline"><div className="pipeline-heading"><span>THE PIPELINE</span><span>01 — 04</span></div><div className="pipeline-steps">{[{ number: "01", title: "DOCUMENT INPUT", detail: "Inspection + thermal PDFs" }, { number: "02", title: "SEMANTIC SEARCH", detail: "Embeddings + FAISS" }, { number: "03", title: "AI REASONING", detail: "Context + LLM analysis" }, { number: "04", title: "REPORT OUTPUT", detail: "Structured diagnosis" }].map((step) => <div className="pipeline-step" key={step.number}><span className="step-number">{step.number}</span><span className="step-title">{step.title}</span><span className="step-detail">{step.detail}</span></div>)}</div></div>
-        <div className="project-grid-list">{projects.slice(1).map((project) => <article className="project-card" key={project.number}><div className="project-card-top"><span>{project.number}</span><span>{project.type}</span></div><h3>{project.name}</h3><p>{project.description}</p><div className="project-stack">{project.stack}</div></article>)}</div>
-        <div className="github-more"><span>MORE PROJECTS</span><p>More experiments, builds, and code.</p><a href="https://github.com/Adithyasapalya" target="_blank" rel="noreferrer">VIEW ALL PROJECTS ON GITHUB <ArrowUpRight size={18} /></a></div>
       </section>
 
-      <section className="content-section experience-section" id="experience">
-        <div className="section-topline"><span>04 / EXPERIENCE</span><span>LEARNING BY BUILDING</span></div><div className="section-heading-block"><span className="section-kicker"><span className="red-line" />WHERE I’VE CONTRIBUTED</span><h2>WORK IN<br /><span className="outline-text">PROGRESS.</span></h2></div>
-        <div className="experience-list"><article className="experience-item"><span className="experience-index">01</span><div><span className="experience-type">AI AGENTS · TESTING · ORCHESTRATION</span><h3>ART / A REAL TIME TECH</h3><p>Working around AI-agent workflows, orchestration behavior, and systematic testing of agent reliability, boundaries, and guardrails.</p></div><span className="experience-period">INTERNSHIP / PROJECT WORK</span></article><article className="experience-item"><span className="experience-index">02</span><div><span className="experience-type">DATA SCIENCE · GENERATIVE AI</span><h3>TAKE IT SMART (OPC)</h3><p>Internship experience focused on data science and Generative AI concepts, practical workflows, and applied problem-solving.</p></div><span className="experience-period">INTERNSHIP</span></article></div>
+      {/* =========================================================
+          07. BLOGS SECTION (ACTUAL PUBLISHED ARTICLES)
+          ========================================================= */}
+      <section className="content-chapter" id="blogs">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>06 / THOUGHTS</span>
+          </div>
+          <span>WRITING & RESEARCH</span>
+        </div>
+
+        <h2 className="chapter-heading">
+          BUILDING IS ONE THING.<br />
+          UNDERSTANDING IS ANOTHER.
+        </h2>
+
+        <div className="blogs-container">
+          {/* Real Blog 1 */}
+          <a
+            href="https://www.arealtimetech.com/blog/we-built-walls-to-stop-hackers"
+            target="_blank"
+            rel="noreferrer"
+            className="blog-card"
+          >
+            <div>
+              <div className="blog-meta-top">
+                <span>A REAL TIME TECH // DEVSECOPS & AGENTS</span>
+                <span className="blog-status-tag">PUBLISHED</span>
+              </div>
+              <h3 className="blog-title">
+                We Built Walls to Stop Hackers (and trapped our own developers inside)
+              </h3>
+              <p className="blog-summary">
+                An engineering breakdown exploring how traditional perimeter barriers and monolithic security controls create friction for development teams, and how modern intelligent agent workflows and contextual guardrails keep development velocity high without sacrificing infrastructure safety.
+              </p>
+            </div>
+            <div className="blog-bottom-row">
+              <span>6 MIN READ</span>
+              <span className="blog-read-link">
+                <span>READ ARTICLE</span>
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+          </a>
+
+          {/* Real Blog 2 */}
+          <a
+            href="https://www.arealtimetech.com/blog/your-api-cloud-and-database-are-connected"
+            target="_blank"
+            rel="noreferrer"
+            className="blog-card"
+          >
+            <div>
+              <div className="blog-meta-top">
+                <span>A REAL TIME TECH // CLOUD & THREAT MODELLING</span>
+                <span className="blog-status-tag">PUBLISHED</span>
+              </div>
+              <h3 className="blog-title">
+                Your API, Cloud, and Database Are Connected (So are your security risks)
+              </h3>
+              <p className="blog-summary">
+                A technical deep dive into modern interconnected distributed systems — investigating attack surfaces, cross-service privilege escalation, and architecting automated security verification across API endpoints, cloud environments, and database layers.
+              </p>
+            </div>
+            <div className="blog-bottom-row">
+              <span>7 MIN READ</span>
+              <span className="blog-read-link">
+                <span>READ ARTICLE</span>
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+          </a>
+        </div>
       </section>
 
-      <section className="content-section resume-section" id="resume">
-        <div className="section-topline"><span>05 / RESUME</span><span>EDUCATION · SKILLS · EXPERIENCE</span></div><div className="resume-layout"><div><span className="section-kicker"><span className="red-line" />THE SHORT VERSION</span><h2>BUILT ON<br /><span className="outline-text">FUNDAMENTALS.</span></h2></div><div className="resume-details"><div className="resume-detail"><span>EDUCATION</span><h3>B.E. — Artificial Intelligence & Machine Learning</h3><p>Vivekananda College of Engineering & Technology</p></div><div className="resume-detail"><span>CORE TOOLKIT</span><p>Python · SQL · Machine Learning · Deep Learning · Generative AI · LLMs · RAG · LangChain · LangGraph · FastAPI</p></div><a className="resume-button" href="/Adithya_Resume.pdf" target="_blank" rel="noreferrer">VIEW RESUME <ArrowUpRight size={19} /></a><p className="resume-note">Place your current PDF in the public folder and name it <code>Adithya_Resume.pdf</code> to activate this link.</p></div></div>
+      {/* =========================================================
+          08. EXPERIENCE SECTION
+          ========================================================= */}
+      <section className="content-chapter" id="experience">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>07 / EXPERIENCE</span>
+          </div>
+          <span>WHERE I BUILT IT</span>
+        </div>
+
+        <h2 className="chapter-heading">
+          FROM<br />
+          LEARNING<br />
+          TO ENGINEERING.
+        </h2>
+
+        <div className="experience-timeline">
+          {/* Experience 1 */}
+          <article className="experience-block">
+            <div className="experience-top-row">
+              <span className="mono" style={{ color: "#FF3138", fontWeight: 700 }}>
+                01 // MANGALORE, INDIA
+              </span>
+              <span className="mono" style={{ color: "#999999" }}>
+                SEPT – ONGOING
+              </span>
+            </div>
+
+            <h3 className="experience-org">Aiotrix Private Limited</h3>
+            <div className="experience-role">ARTIFICIAL INTELLIGENCE ENGINEER INTERN</div>
+
+            <ul className="experience-responsibilities-list">
+              <li>
+                Contributing to AEGIS, an AI-powered cybersecurity solution with the Sentinel framework for security assessment and continuous protection of user-created infrastructure.
+              </li>
+              <li>
+                Developing backend microservices using Go and frontend components using React to support security monitoring and framework integration.
+              </li>
+              <li>
+                Building agentic security workflows using LLMs, Planner, Reinforcement Learning (RL), telemetry, and policy-based guardrails for automated test planning and execution.
+              </li>
+              <li>
+                Implementing security testing, threat analysis, and evidence-based vulnerability validation, with findings classified as Confirmed, Rejected, or Unverified, alongside risk assessment and remediation workflows.
+              </li>
+            </ul>
+          </article>
+
+          {/* Experience 2 */}
+          <article className="experience-block">
+            <div className="experience-top-row">
+              <span className="mono" style={{ color: "#FF3138", fontWeight: 700 }}>
+                02 // BANGALORE, INDIA
+              </span>
+              <span className="mono" style={{ color: "#999999" }}>
+                FEB – MAY 2026
+              </span>
+            </div>
+
+            <h3 className="experience-org">Take It Smart OPC Pvt Ltd</h3>
+            <div className="experience-role">DATA SCIENCE AND MACHINE LEARNING INTERN</div>
+
+            <ul className="experience-responsibilities-list">
+              <li>
+                Developed AI-powered applications using LangChain, RAG, FAISS, and OpenAI models.
+              </li>
+              <li>
+                Built projects including document chatbots, semantic search systems, AI agents, and FastAPI-based AI services.
+              </li>
+              <li>
+                Worked on prompt engineering, vector databases, embeddings, and LLM-based workflows.
+              </li>
+              <li>
+                Implemented Streamlit dashboards and integrated AI models for real-world automation tasks.
+              </li>
+              <li>
+                Explored Agentic AI frameworks such as CrewAI, LangGraph, and Amazon Bedrock for intelligent system development.
+              </li>
+            </ul>
+          </article>
+
+          {/* Education & Leadership */}
+          <article className="experience-block">
+            <div className="experience-top-row">
+              <span className="mono" style={{ color: "#FF3138", fontWeight: 700 }}>
+                03 // EDUCATION & LEADERSHIP
+              </span>
+              <span className="mono" style={{ color: "#999999" }}>
+                2022 – 2026
+              </span>
+            </div>
+
+            <h3 className="experience-org">Vivekananda College of Engineering & Technology, Puttur</h3>
+            <div className="experience-role">BE IN ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING · CGPA: 7.3</div>
+
+            <ul className="experience-responsibilities-list">
+              <li>
+                MDC Chairman at Vivekananda College of Engineering and Technology, Puttur.
+              </li>
+              <li>
+                MDC Co-Lead at IEEE Mangalore Subsection — coordinated with engineering colleges, branch counselors, and student leaders to organize technical events and initiatives.
+              </li>
+              <li>
+                Certifications: Cisco Networking Academy (Python Essentials 1), HP AI for Beginners, Neo4j Certified Professional, Accenture Nordics Software Engineering Simulation, Postman NLP Academy.
+              </li>
+            </ul>
+          </article>
+        </div>
       </section>
 
-      <section className="content-section contact-section" id="contact">
-        <div className="section-topline"><span>06 / CONTACT</span><span>OPEN TO THE RIGHT OPPORTUNITY</span></div><span className="section-kicker"><span className="red-line" />HAVE SOMETHING IN MIND?</span><h2>LET’S BUILD<br /><span className="outline-text">SOMETHING.</span></h2><div className="contact-bottom"><p>Interested in AI engineering, GenAI, agentic systems, or building something useful? Let’s talk.</p><div className="contact-links"><a href="mailto:adithyasapalya30@gmail.com"><Mail size={18} /> EMAIL <ArrowUpRight size={16} /></a><a href="https://www.linkedin.com/in/adithya-sapalya/" target="_blank" rel="noreferrer"><Linkedin size={18} /> LINKEDIN <ArrowUpRight size={16} /></a><a href="https://github.com/Adithyasapalya" target="_blank" rel="noreferrer"><Github size={18} /> GITHUB <ArrowUpRight size={16} /></a></div></div><footer className="site-footer"><span>ADITHYA<span className="footer-red">.exe</span></span><span>DESIGNED TO KEEP LEARNING.</span><a href="#home">BACK TO TOP ↑</a></footer>
+      {/* =========================================================
+          09. RESUME SECTION
+          ========================================================= */}
+      <section className="content-chapter" id="resume">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>08 / PROFILE</span>
+          </div>
+          <span>FULL PROFILE</span>
+        </div>
+
+        <div className="resume-layout-grid">
+          <div>
+            <h2 className="chapter-heading">
+              YOU'VE SEEN<br />
+              WHAT I BUILD.
+            </h2>
+          </div>
+
+          <div>
+            <p className="body-text">
+              Here's the complete profile — education, experience, certifications, leadership, and technical skills.
+            </p>
+
+            <div className="resume-buttons-group">
+              <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary"
+              >
+                <span>VIEW RESUME</span>
+                <ArrowUpRight size={15} />
+              </a>
+
+              <a
+                href="/resume.pdf"
+                download="Adithya_Resume.pdf"
+                className="btn-secondary"
+              >
+                <span>DOWNLOAD PDF</span>
+                <ArrowDown size={15} />
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
-    </main>
+
+      {/* =========================================================
+          10. CONTACT SECTION & FORM (SOMETHING IN YELLOW OUTLINE)
+          ========================================================= */}
+      <section className="content-chapter" id="contact">
+        <div className="section-label-group">
+          <div>
+            <span className="red-indicator" />
+            <span>09 / EXIT</span>
+          </div>
+          <span>WHAT'S NEXT?</span>
+        </div>
+
+        <div className="contact-layout-grid">
+          {/* Left Column */}
+          <div>
+            <span className="section-kicker">CONTACT</span>
+            <h2 className="chapter-heading">
+              LET'S BUILD<br />
+              <span className="outline-yellow" style={{ fontSize: "0.85em" }}>SOMETHING.</span>
+            </h2>
+
+            <p className="body-text" style={{ marginTop: "24px" }}>
+              Have an opportunity, project, collaboration, or idea? Send me the details and I'll get back to you.
+            </p>
+
+            <div className="contact-channels-list">
+              <a href="mailto:adithyasapalya30@gmail.com" className="channel-link">
+                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Mail size={16} color="#FF3138" /> EMAIL
+                </span>
+                <ArrowUpRight size={16} />
+              </a>
+
+              <a
+                href="https://linkedin.com/in/adithya-sapalya/"
+                target="_blank"
+                rel="noreferrer"
+                className="channel-link"
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <LinkedinIcon size={16} /> LINKEDIN
+                </span>
+                <ArrowUpRight size={16} />
+              </a>
+
+              <a
+                href="https://github.com/Adithyasapalya"
+                target="_blank"
+                rel="noreferrer"
+                className="channel-link"
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <GithubIcon size={16} /> GITHUB
+                </span>
+                <ArrowUpRight size={16} />
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column: Contact Form */}
+          <div className="contact-form-container">
+            {formSubmitted ? (
+              <div className="form-success-banner">
+                ✓ Message registered. Structured for email dispatch. I'll get back to you shortly.
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="contact-form">
+                <div className="form-group">
+                  <label htmlFor="name" className="form-label">
+                    NAME *
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Your name"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email" className="form-label">
+                    EMAIL *
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@example.com"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="company" className="form-label">
+                    COMPANY / ORGANIZATION (OPTIONAL)
+                  </label>
+                  <input
+                    id="company"
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    placeholder="Company or institution"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="subject" className="form-label">
+                    SUBJECT *
+                  </label>
+                  <input
+                    id="subject"
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    placeholder="Project inquiry, role, or discussion"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="message" className="form-label">
+                    MESSAGE *
+                  </label>
+                  <textarea
+                    id="message"
+                    required
+                    rows={4}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    placeholder="Share project scope or opportunity details..."
+                    className="form-textarea"
+                  />
+                </div>
+
+                <button type="submit" className="form-submit-btn">
+                  <span>SEND TRANSMISSION</span>
+                  <ArrowUpRight size={16} />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
+          11. FOOTER
+          ========================================================= */}
+      <footer className="site-footer">
+        <span className="footer-brand">
+          ADITHYA<span>.exe</span>
+        </span>
+
+        <span>AI · ML · GENAI · AGENTIC SYSTEMS · 2026</span>
+
+        <a href="#hero" className="footer-back-top">
+          BACK TO TOP ↑
+        </a>
+      </footer>
+    </div>
   );
 }
-
-export default App;
