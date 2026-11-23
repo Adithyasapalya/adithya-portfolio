@@ -148,7 +148,7 @@
 .hero-section {
   position: relative;
   min-height: 100vh;
-  padding: 130px 6% 60px;
+  padding: 92px 6% 60px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1150,7 +1150,7 @@
   }
 
   .hero-section {
-    padding-top: 120px;
+    padding-top: 86px;
     padding-bottom: 50px;
   }
 
