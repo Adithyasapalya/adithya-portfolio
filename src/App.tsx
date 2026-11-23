@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { ArrowDown, ArrowUpRight, Mail } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./components/SocialIcons";
 import { CarModelViewer } from "./components/CarModelViewer";
 import profileImg from "./assets/profile.jpeg";
 import "./App.css";
 
 export default function App() {
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,13 +13,70 @@ export default function App() {
     subject: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "activation_needed" | "error">("idle");
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const mailtoHref = `mailto:adithyasapalya30@gmail.com?subject=${encodeURIComponent(
+    formData.subject ? `[ADITHYA.exe] ${formData.subject}` : "Project Inquiry via ADITHYA.exe"
+  )}&body=${encodeURIComponent(
+    `Name: ${formData.name || "N/A"}\nEmail: ${formData.email || "N/A"}\nCompany: ${
+      formData.company || "N/A"
+    }\n\nMessage:\n${formData.message}`
+  )}`;
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       return;
     }
-    setFormSubmitted(true);
+
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+    setStatusMessage("");
+
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/adithyasapalya30@gmail.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          _replyto: formData.email,
+          _subject: `[ADITHYA.exe] ${formData.subject}`,
+          _captcha: "false",
+          _template: "table",
+          company: formData.company || "Not provided",
+          message: formData.message,
+          "Website Source": typeof window !== "undefined" ? window.location.origin : "ADITHYA.exe",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success === "true" || data.success === true) {
+        setSubmitStatus("success");
+        setStatusMessage(
+          "Transmission dispatched successfully! Your message was delivered directly to adithyasapalya30@gmail.com. I'll get back to you shortly."
+        );
+      } else if (typeof data.message === "string" && data.message.toLowerCase().includes("activation")) {
+        setSubmitStatus("activation_needed");
+        setStatusMessage(
+          "FormSubmit Activation Pending: FormSubmit has sent a one-time activation confirmation email to adithyasapalya30@gmail.com. Once you click the activation link in your inbox, automated forwarding is permanently activated!"
+        );
+      } else {
+        setSubmitStatus("error");
+        setStatusMessage(data.message || "Failed to dispatch transmission via mail relay. Please use direct email below.");
+      }
+    } catch {
+      setSubmitStatus("error");
+      setStatusMessage("Network error: Unable to contact mail relay service. You can send directly via your mail client below.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -758,12 +814,66 @@ export default function App() {
 
           {/* Right Column: Contact Form */}
           <div className="contact-form-container">
-            {formSubmitted ? (
+            {submitStatus === "success" ? (
               <div className="form-success-banner">
-                ✓ Message registered. Structured for email dispatch. I'll get back to you shortly.
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "8px" }}>
+                  <CheckCircle2 size={18} color="#22c55e" />
+                  <strong>TRANSMISSION DELIVERED</strong>
+                </div>
+                <p>{statusMessage}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ name: "", email: "", company: "", subject: "", message: "" });
+                    setSubmitStatus("idle");
+                    setStatusMessage("");
+                  }}
+                  className="form-btn-secondary"
+                  style={{ marginTop: "18px" }}
+                >
+                  SEND ANOTHER TRANSMISSION
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="contact-form">
+                {submitStatus === "activation_needed" && (
+                  <div className="form-activation-banner">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                      <AlertCircle size={18} color="#FFD300" />
+                      <strong>ONE-TIME ACTIVATION REQUIRED</strong>
+                    </div>
+                    <p style={{ margin: "0 0 14px 0", fontSize: "0.78rem", lineHeight: 1.6 }}>{statusMessage}</p>
+                    <a
+                      href={mailtoHref}
+                      className="form-btn-secondary"
+                      style={{ color: "var(--color-yellow)", borderColor: "var(--color-yellow)" }}
+                    >
+                      <Mail size={14} />
+                      <span>DISPATCH VIA EMAIL CLIENT NOW</span>
+                      <ArrowUpRight size={14} />
+                    </a>
+                  </div>
+                )}
+
+                {submitStatus === "error" && (
+                  <div className="form-error-banner">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                      <AlertCircle size={18} color="#FF3138" />
+                      <strong>DISPATCH NOTICE</strong>
+                    </div>
+                    <p style={{ margin: "0 0 14px 0", fontSize: "0.78rem", lineHeight: 1.6 }}>{statusMessage}</p>
+                    <a
+                      href={mailtoHref}
+                      className="form-btn-secondary"
+                      style={{ color: "var(--color-red)", borderColor: "var(--color-red)" }}
+                    >
+                      <Mail size={14} />
+                      <span>DISPATCH VIA EMAIL CLIENT NOW</span>
+                      <ArrowUpRight size={14} />
+                    </a>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label htmlFor="name" className="form-label">
                     NAME *
@@ -776,6 +886,7 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Your name"
                     className="form-input"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -791,6 +902,7 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="email@example.com"
                     className="form-input"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -805,6 +917,7 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="Company or institution"
                     className="form-input"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -820,6 +933,7 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     placeholder="Project inquiry, role, or discussion"
                     className="form-input"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -835,13 +949,34 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Share project scope or opportunity details..."
                     className="form-textarea"
+                    disabled={isSubmitting}
                   />
                 </div>
 
-                <button type="submit" className="form-submit-btn">
-                  <span>SEND TRANSMISSION</span>
-                  <ArrowUpRight size={16} />
-                </button>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                  <button type="submit" className="form-submit-btn" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>DISPATCHING...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>SEND TRANSMISSION</span>
+                        <ArrowUpRight size={16} />
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={mailtoHref}
+                    className="form-btn-secondary"
+                    title="Open directly in your default mail app"
+                  >
+                    <Mail size={14} />
+                    <span>OPEN IN MAIL APP</span>
+                  </a>
+                </div>
               </form>
             )}
           </div>

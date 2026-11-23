@@ -29,3 +29,4 @@ export function LinkedinIcon({ size = 18, className = "" }: { size?: number; cla
     </svg>
   );
 }
+

@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { Volume2, VolumeX } from "lucide-react";
 
 // Generate high-contrast studio reflection map with softboxes
 function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
@@ -8,45 +9,45 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   pmremGenerator.compileEquirectangularShader();
 
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x0a0a0e);
+  envScene.background = new THREE.Color(0x060608);
 
-  // Longitudinal overhead strip light
-  const topStripGeo = new THREE.PlaneGeometry(16, 70);
+  // Longitudinal overhead strip light (spine reflection)
+  const topStripGeo = new THREE.PlaneGeometry(14, 60);
   const topStripMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const topStrip = new THREE.Mesh(topStripGeo, topStripMat);
-  topStrip.position.set(0, 18, 0);
+  topStrip.position.set(0, 16, 0);
   topStrip.rotation.x = Math.PI / 2;
   envScene.add(topStrip);
 
-  // Front-right key softbox panel
-  const keySoftboxGeo = new THREE.PlaneGeometry(26, 26);
+  // Front-right key softbox panel (fender gleam)
+  const keySoftboxGeo = new THREE.PlaneGeometry(24, 24);
   const keySoftboxMat = new THREE.MeshBasicMaterial({ color: 0xf5f8ff });
   const keySoftbox = new THREE.Mesh(keySoftboxGeo, keySoftboxMat);
-  keySoftbox.position.set(16, 14, 16);
+  keySoftbox.position.set(16, 12, 16);
   keySoftbox.lookAt(0, 0, 0);
   envScene.add(keySoftbox);
 
-  // Left fill softbox panel
-  const fillSoftboxGeo = new THREE.PlaneGeometry(22, 22);
+  // Left fill softbox panel (cool sheen)
+  const fillSoftboxGeo = new THREE.PlaneGeometry(20, 20);
   const fillSoftboxMat = new THREE.MeshBasicMaterial({ color: 0xdae6f8 });
   const fillSoftbox = new THREE.Mesh(fillSoftboxGeo, fillSoftboxMat);
-  fillSoftbox.position.set(-18, 12, 10);
+  fillSoftbox.position.set(-18, 10, 10);
   fillSoftbox.lookAt(0, 0, 0);
   envScene.add(fillSoftbox);
 
-  // Rear softbox panel
-  const rearSoftboxGeo = new THREE.PlaneGeometry(20, 20);
+  // Rear softbox panel (rear spoiler & diffuser accent)
+  const rearSoftboxGeo = new THREE.PlaneGeometry(18, 18);
   const rearSoftboxMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const rearSoftbox = new THREE.Mesh(rearSoftboxGeo, rearSoftboxMat);
-  rearSoftbox.position.set(0, 14, -22);
+  rearSoftbox.position.set(0, 12, -20);
   rearSoftbox.lookAt(0, 0, 0);
   envScene.add(rearSoftbox);
 
-  // Horizontal side rim strip
-  const sideStripGeo = new THREE.PlaneGeometry(45, 4);
+  // Horizontal side rim strip (waistline gleam)
+  const sideStripGeo = new THREE.PlaneGeometry(40, 3);
   const sideStripMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const sideStrip = new THREE.Mesh(sideStripGeo, sideStripMat);
-  sideStrip.position.set(14, 3, 0);
+  sideStrip.position.set(12, 2.5, 0);
   sideStrip.rotation.y = -Math.PI / 2;
   envScene.add(sideStrip);
 
@@ -57,6 +58,61 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
 
 export function CarModelViewer() {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  // Authentic Mercedes-AMG GT3 MP3 audio
+  useEffect(() => {
+    const audio = new Audio("/audio/gt3-engine-sound.mp3");
+    audio.preload = "auto";
+    audio.volume = 0.95;
+
+    const onEnded = () => setIsPlayingAudio(false);
+    const onError = () => {
+      const fallbackUrl = encodeURI(
+        "/audio/Mercedes AMG GT3 Evo Pure sound ｜ Mettler-Muller [mykL4QTbbeM].mp3"
+      );
+      if (audio.src !== fallbackUrl) {
+        audio.src = fallbackUrl;
+        audio.load();
+      } else {
+        setIsPlayingAudio(false);
+      }
+    };
+
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
+    audioRef.current = audio;
+
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
+
+  const toggleEngineSound = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (!audio.paused) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlayingAudio(false);
+    } else {
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlayingAudio(true))
+          .catch((err) => {
+            console.error("Audio playback error:", err);
+            setIsPlayingAudio(false);
+          });
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -69,10 +125,10 @@ export function CarModelViewer() {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 560;
     const camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 100);
-    camera.position.set(0, 0.22, 4.85);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0, 0.35, 4.95);
+    camera.lookAt(0, -0.05, 0);
 
-    // Renderer
+    // Renderer with ACES Filmic high-contrast tone mapping
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
@@ -82,40 +138,41 @@ export function CarModelViewer() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.05;
     container.appendChild(renderer.domElement);
 
     // Studio Environment Map for realistic paint & glass reflections
     const studioEnv = createCarStudioEnvironment(renderer);
     scene.environment = studioEnv;
 
-    // Direct Studio Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+    // Direct Studio Lights - Calibrated for high-contrast motorsport showroom look:
+    // Low ambient prevents washing out carbon and shadows; directional key provides crisp highlights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.40);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
-    keyLight.position.set(6, 9, 6);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    keyLight.position.set(5.5, 8.5, 6.0);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xdde8ff, 1.5);
-    fillLight.position.set(-6, 4, 3);
+    const fillLight = new THREE.DirectionalLight(0xc8dcff, 0.9);
+    fillLight.position.set(-6, 3.5, 3.5);
     scene.add(fillLight);
 
-    const rimBlue = new THREE.DirectionalLight(0x0142a2, 1.6);
-    rimBlue.position.set(-6, 3, -4);
+    const rimBlue = new THREE.DirectionalLight(0x0142a2, 1.8);
+    rimBlue.position.set(-5, 2.5, -4);
     scene.add(rimBlue);
 
-    const rimYellow = new THREE.DirectionalLight(0xffd300, 0.8);
-    rimYellow.position.set(4, -2, -3);
-    scene.add(rimYellow);
+    const rimWarm = new THREE.DirectionalLight(0xffeedd, 1.2);
+    rimWarm.position.set(0, 5.0, -5.5);
+    scene.add(rimWarm);
 
     // Pivot group
     const pivot = new THREE.Group();
     scene.add(pivot);
 
-    // Initial 3/4 front isometric hero angle
-    let targetRotY = -Math.PI * 0.28; // ~-50 deg front three-quarter view
-    let targetRotX = 0.08;           // slight downward tilt for roof/hood contours
+    // Initial 3/4 front isometric hero angle (~-50 deg around Y)
+    let targetRotY = -Math.PI * 0.28;
+    let targetRotX = 0.08;
     let currentRotY = targetRotY;
     let currentRotX = targetRotX;
 
@@ -126,10 +183,7 @@ export function CarModelViewer() {
 
     const applyOptimalScale = () => {
       const isMobile = window.innerWidth < 768;
-      // Sweet spot calibration:
-      // - Larger than the reduced version (~2.8) so it looks bold and heroically sized
-      // - Smaller than the previous oversized version (4.15) so it never clips or hits boundaries
-      const targetSize = isMobile ? 3.25 : 3.95;
+      const targetSize = isMobile ? 3.15 : 3.85;
       pivot.scale.setScalar(targetSize / (modelMaxDim || 4.65));
     };
 
@@ -152,8 +206,16 @@ export function CarModelViewer() {
         modelMaxDim = Math.max(size.x, size.y, size.z) || 4.65;
         applyOptimalScale();
 
-        // Preserve all native materials, textures, and clearcoat exactly as authored
+        // Material traversal: Match Image 1 reference exactly
         gltf.scene.traverse((node) => {
+          // 1. Hide Object_25 (the washed-out wire mesh plate covering the grille):
+          // In Image 1, this mesh is hidden, revealing the red tow hook, the dark radiator fins,
+          // and depth behind the vertical chrome slats!
+          if (node.name === "Object_25") {
+            node.visible = false;
+            return;
+          }
+
           if ((node as THREE.Mesh).isMesh) {
             const mesh = node as THREE.Mesh;
             mesh.castShadow = true;
@@ -170,7 +232,48 @@ export function CarModelViewer() {
                   mat.map.colorSpace = THREE.SRGBColorSpace;
                   mat.map.needsUpdate = true;
                 }
-                mat.envMapIntensity = 1.2;
+
+                const matName = (mat.name || "").toLowerCase();
+
+                // 2. Carbon Aero (Canards / Dive Planes, Front Splitter, Rear Diffuser)
+                // Crisp glossy twill weave with deep contrast (matching Image 1)
+                if (
+                  matName.includes("carbon") ||
+                  matName.includes("exterior_details")
+                ) {
+                  mat.roughness = 0.32;
+                  mat.metalness = 0.15;
+                  mat.envMapIntensity = 0.7;
+                  if (mat.normalScale) {
+                    mat.normalScale.set(0.65, 0.65);
+                  }
+                }
+                // 3. Red Bull Livery bodywork (Deep glossy metallic royal blue)
+                else if (matName.includes("livery")) {
+                  mat.roughness = 0.18;
+                  mat.metalness = 0.28;
+                  mat.envMapIntensity = 1.25;
+                }
+                // 4. Radiator core & Engine components (Dark with visible red tow hook & cooling fins)
+                else if (matName.includes("engine_components")) {
+                  mat.roughness = 0.65;
+                  mat.metalness = 0.25;
+                  mat.envMapIntensity = 0.4;
+                }
+                // 5. Headlight glass lenses (Crystal clear with deep dark reflectors)
+                else if (matName.includes("glass") || matName.includes("lights")) {
+                  mat.roughness = 0.05;
+                  mat.envMapIntensity = 1.6;
+                }
+                // 6. Wheels, Calipers & Discs
+                else if (matName.includes("rim") || matName.includes("caliper") || matName.includes("disc")) {
+                  mat.envMapIntensity = 1.4;
+                  mat.roughness = 0.22;
+                  mat.metalness = 0.65;
+                } else {
+                  mat.envMapIntensity = 1.0;
+                }
+
                 mat.needsUpdate = true;
               }
             });
@@ -187,11 +290,13 @@ export function CarModelViewer() {
 
     // Interactive pointer drag (user can rotate 360°, stays static on release)
     let isDragging = false;
+    let dragDistance = 0;
     let prevX = 0;
     let prevY = 0;
 
     const onPointerDown = (e: PointerEvent) => {
       isDragging = true;
+      dragDistance = 0;
       prevX = e.clientX;
       prevY = e.clientY;
     };
@@ -200,16 +305,21 @@ export function CarModelViewer() {
       if (!isDragging) return;
       const deltaX = e.clientX - prevX;
       const deltaY = e.clientY - prevY;
+      dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
       prevX = e.clientX;
       prevY = e.clientY;
 
       targetRotY += deltaX * 0.007;
       targetRotX += deltaY * 0.007;
-      targetRotX = Math.max(-0.20, Math.min(0.26, targetRotX));
+      targetRotX = Math.max(-0.16, Math.min(0.20, targetRotX));
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       isDragging = false;
+      // Quick click/tap on car canvas triggers real GT3 engine audio
+      if (dragDistance < 6 && !(e.target as HTMLElement)?.closest(".car-sound-toggle")) {
+        toggleEngineSound();
+      }
     };
 
     const domEl = renderer.domElement;
@@ -275,7 +385,22 @@ export function CarModelViewer() {
         container.removeChild(domEl);
       }
     };
-  }, []);
+  }, [toggleEngineSound]);
 
-  return <div className="car-hero-standalone" ref={containerRef} />;
+  return (
+    <div className="car-hero-standalone" ref={containerRef}>
+      {/* Floating minimalist sound toggle Easter egg */}
+      <button
+        type="button"
+        className={`car-sound-toggle ${isPlayingAudio ? "active" : ""}`}
+        onClick={toggleEngineSound}
+        aria-label="Toggle Mercedes-AMG GT3 Engine Audio"
+        title="Click to hear the real twin-turbo V8 Mercedes-AMG GT3 exhaust"
+      >
+        {isPlayingAudio ? <VolumeX size={13} /> : <Volume2 size={13} />}
+        <span>{isPlayingAudio ? "GT3 EXHAUST [ON]" : "GT3 EXHAUST"}</span>
+        {isPlayingAudio && <span className="sound-pulse-dot" />}
+      </button>
+    </div>
+  );
 }

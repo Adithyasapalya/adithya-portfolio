@@ -103,6 +103,25 @@ svg {
   max-width: 100%;
 }
 
+/* Custom dark scrollbar to eliminate native Windows light grey bar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #101010;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 212, 206, 0.22);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-red);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 212, 206, 0.22) #101010;
+}
+
 /* Reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   html {
