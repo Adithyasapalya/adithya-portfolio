@@ -179,9 +179,9 @@
 
 @media (min-width: 992px) {
   .hero-main {
-    grid-template-columns: minmax(0, 1.15fr) minmax(420px, 1.25fr);
+    grid-template-columns: minmax(0, 1fr) minmax(480px, 1.35fr);
     align-items: center;
-    gap: 40px;
+    gap: 30px;
   }
 }
 
@@ -242,7 +242,7 @@
 .car-hero-standalone {
   position: relative;
   width: 100%;
-  height: clamp(440px, 62vh, 660px);
+  height: clamp(520px, 75vh, 760px);
   background: transparent;
   display: flex;
   align-items: center;

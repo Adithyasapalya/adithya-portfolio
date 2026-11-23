@@ -65,11 +65,11 @@ export function CarModelViewer() {
     // Scene
     const scene = new THREE.Scene();
 
-    // Camera
-    const width = container.clientWidth || 580;
-    const height = container.clientHeight || 520;
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.45, 4.8);
+    // Camera with comfortable distance & wide frustum to eliminate all boundary clipping
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 560;
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+    camera.position.set(0, 0.40, 5.0);
     camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -114,22 +114,29 @@ export function CarModelViewer() {
     scene.add(pivot);
 
     // Initial 3/4 front isometric hero angle
-    // (Mercedes AMG GT3 front is along +X, so turning around Y shows front grille and side livery)
     let targetRotY = -Math.PI * 0.28; // ~-50 deg front three-quarter view
-    let targetRotX = 0.12;           // slight downward pitch
+    let targetRotX = 0.10;           // slight downward tilt
     let currentRotY = targetRotY;
     let currentRotX = targetRotX;
 
     pivot.rotation.y = currentRotY;
     pivot.rotation.x = currentRotX;
 
-    let modelMaxDim = 4.65;
+    // Bounding sphere radius of car (default 2.72 for Mercedes AMG GT3)
+    let boundingSphereRadius = 2.72;
 
-    const applyOptimalScale = () => {
-      const isMobile = window.innerWidth < 768;
-      // Scale boldly to fill the Hero viewport prominently
-      const targetSize = isMobile ? 3.0 : 3.7;
-      pivot.scale.setScalar(targetSize / (modelMaxDim || 1));
+    const fitModelToViewport = () => {
+      const vFovRad = (camera.fov * Math.PI) / 180;
+      const frustumH = 2 * Math.tan(vFovRad / 2) * camera.position.z;
+      const frustumW = frustumH * camera.aspect;
+
+      // Safe limit ensures the rotating 3D bounding sphere fits completely inside
+      // BOTH width and height of the viewport with a clean safety margin,
+      // so turning the car at ANY 360° angle NEVER touches or slices against the canvas edge!
+      const minDimension = Math.min(frustumW, frustumH);
+      const safeDiameter = minDimension * 0.92;
+      const safeScale = safeDiameter / (boundingSphereRadius * 2);
+      pivot.scale.setScalar(safeScale);
     };
 
     // Load Model
@@ -139,17 +146,20 @@ export function CarModelViewer() {
     loader.load(
       modelUrl,
       (gltf) => {
-        // Calculate model bounding box and center exactly
+        // Calculate model bounding box and center exactly on origin
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
 
         gltf.scene.position.x = -center.x;
         gltf.scene.position.y = -center.y;
         gltf.scene.position.z = -center.z;
 
-        modelMaxDim = Math.max(size.x, size.y, size.z);
-        applyOptimalScale();
+        // Compute exact bounding sphere radius of rotating car
+        const sphere = new THREE.Sphere();
+        box.getBoundingSphere(sphere);
+        boundingSphereRadius = Math.max(sphere.radius, 2.5);
+
+        fitModelToViewport();
 
         // Preserve all native materials, textures, and clearcoat exactly as authored
         gltf.scene.traverse((node) => {
@@ -165,12 +175,10 @@ export function CarModelViewer() {
             materials.forEach((mat) => {
               if (!mat) return;
               if (mat instanceof THREE.MeshStandardMaterial) {
-                // Ensure sRGB color space for textures
                 if (mat.map) {
                   mat.map.colorSpace = THREE.SRGBColorSpace;
                   mat.map.needsUpdate = true;
                 }
-                // Subtle environment reflection boost
                 mat.envMapIntensity = 1.2;
                 mat.needsUpdate = true;
               }
@@ -206,7 +214,7 @@ export function CarModelViewer() {
 
       targetRotY += deltaX * 0.007;
       targetRotX += deltaY * 0.007;
-      targetRotX = Math.max(-0.45, Math.min(0.55, targetRotX));
+      targetRotX = Math.max(-0.40, Math.min(0.48, targetRotX));
     };
 
     const onPointerUp = () => {
@@ -219,7 +227,7 @@ export function CarModelViewer() {
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
 
-    // Resize handling
+    // Resize handling: dynamically update camera aspect and re-fit scale to new dimensions
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width;
@@ -228,7 +236,7 @@ export function CarModelViewer() {
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
-          applyOptimalScale();
+          fitModelToViewport();
         }
       }
     });
