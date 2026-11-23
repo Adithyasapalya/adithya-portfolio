@@ -1,75 +1,76 @@
-# React + TypeScript + Vite
+# ADITHYA.exe — AI & Machine Learning Engineer Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A futuristic, minimal, engineering-focused personal portfolio website for **Adithya Ashok Sapalya** (Artificial Intelligence & Machine Learning Engineer). Designed as a digital engineering interface that balances technical precision with a modern aesthetic.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Overview
 
-## React Compiler
+- **Identity**: ADITHYA.exe
+- **Role**: Artificial Intelligence & Machine Learning Engineer
+- **Focus**: Intelligent Systems, Generative AI, LLMs, RAG, Multi-Agent Orchestration, and Autonomous Automation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite](https://vite.dev/)
+- **3D Graphics**: [Three.js](https://threejs.org/) (WebGL, GLTF 2.0 PBR rendering with dynamic studio reflection mapping)
+- **Styling**: Modern CSS3 (CSS Variables, Grid, Flexbox, High-Contrast Telemetry Theme)
+- **Icons**: [Lucide React](https://lucide.dev/) + Custom SVGs
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Key Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Interactive 3D Showpiece**: Real-time WebGL 3D model with studio softbox reflections, PBR materials, clearcoat paint, and 360° touch/mouse orbital inspection.
+- **Single-Page Architecture**: High-performance long-scroll interface with smooth navigation anchors across all chapters.
+- **Capabilities Matrix**: Structured breakdown of skills across Machine Learning, Generative AI, Agentic Workflows, and Core Engineering.
+- **Project Showcase**: Highlights production-grade systems including Chronos AI (multi-agent quantitative trading system), CyberSec AI, and Computer Vision solutions.
+- **Technical Writing**: Direct integration with published research and engineering articles on security, cloud, and AI architectures.
+- **Responsive & Clean**: Engineered to render cleanly and legibly across mobile, tablet, and desktop viewports.
 
-```
+---
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm`, `pnpm`, or `yarn`
 
-```
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Adithyasapalya/adithya-portfolio.git
+   cd adithya-portfolio
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open `http://localhost:5180` in your browser.
+
+---
+
+## Available Scripts
+
+- `npm run dev` — Starts the development server with Hot Module Replacement (HMR).
+- `npm run build` — Compiles TypeScript and bundles production-ready assets into `dist/`.
+- `npm run lint` — Runs ESLint checks across the codebase.
+- `npm run preview` — Locally previews the production build.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
