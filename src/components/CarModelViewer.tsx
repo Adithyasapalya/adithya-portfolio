@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-// Generate a high-contrast studio reflection map with softboxes
+// Generate high-contrast studio reflection map with softboxes
 function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   pmremGenerator.compileEquirectangularShader();
@@ -10,7 +10,7 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   const envScene = new THREE.Scene();
   envScene.background = new THREE.Color(0x0a0a0e);
 
-  // Longitudinal overhead strip light (spine reflection)
+  // Longitudinal overhead strip light
   const topStripGeo = new THREE.PlaneGeometry(16, 70);
   const topStripMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const topStrip = new THREE.Mesh(topStripGeo, topStripMat);
@@ -18,7 +18,7 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   topStrip.rotation.x = Math.PI / 2;
   envScene.add(topStrip);
 
-  // Front-right key softbox panel (fender gleam)
+  // Front-right key softbox panel
   const keySoftboxGeo = new THREE.PlaneGeometry(26, 26);
   const keySoftboxMat = new THREE.MeshBasicMaterial({ color: 0xf5f8ff });
   const keySoftbox = new THREE.Mesh(keySoftboxGeo, keySoftboxMat);
@@ -26,7 +26,7 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   keySoftbox.lookAt(0, 0, 0);
   envScene.add(keySoftbox);
 
-  // Left fill softbox panel (cool ambient sheen)
+  // Left fill softbox panel
   const fillSoftboxGeo = new THREE.PlaneGeometry(22, 22);
   const fillSoftboxMat = new THREE.MeshBasicMaterial({ color: 0xdae6f8 });
   const fillSoftbox = new THREE.Mesh(fillSoftboxGeo, fillSoftboxMat);
@@ -34,7 +34,7 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   fillSoftbox.lookAt(0, 0, 0);
   envScene.add(fillSoftbox);
 
-  // Rear softbox panel (highlights rear spoiler & aero)
+  // Rear softbox panel
   const rearSoftboxGeo = new THREE.PlaneGeometry(20, 20);
   const rearSoftboxMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const rearSoftbox = new THREE.Mesh(rearSoftboxGeo, rearSoftboxMat);
@@ -42,7 +42,7 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
   rearSoftbox.lookAt(0, 0, 0);
   envScene.add(rearSoftbox);
 
-  // Horizontal side rim strip (waistline gleam)
+  // Horizontal side rim strip
   const sideStripGeo = new THREE.PlaneGeometry(45, 4);
   const sideStripMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const sideStrip = new THREE.Mesh(sideStripGeo, sideStripMat);
@@ -69,7 +69,7 @@ export function CarModelViewer() {
     const width = container.clientWidth || 580;
     const height = container.clientHeight || 520;
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.40, 4.5);
+    camera.position.set(0, 0.45, 4.8);
     camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -85,27 +85,27 @@ export function CarModelViewer() {
     renderer.toneMappingExposure = 1.25;
     container.appendChild(renderer.domElement);
 
-    // Studio Environment Map for Realistic Automotive Reflections
+    // Studio Environment Map for realistic paint & glass reflections
     const studioEnv = createCarStudioEnvironment(renderer);
     scene.environment = studioEnv;
 
     // Direct Studio Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambientLight);
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
     keyLight.position.set(6, 9, 6);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xdde8ff, 1.4);
+    const fillLight = new THREE.DirectionalLight(0xdde8ff, 1.5);
     fillLight.position.set(-6, 4, 3);
     scene.add(fillLight);
 
-    const rimBlue = new THREE.DirectionalLight(0x0142a2, 2.0);
+    const rimBlue = new THREE.DirectionalLight(0x0142a2, 1.6);
     rimBlue.position.set(-6, 3, -4);
     scene.add(rimBlue);
 
-    const rimYellow = new THREE.DirectionalLight(0xffd300, 0.9);
+    const rimYellow = new THREE.DirectionalLight(0xffd300, 0.8);
     rimYellow.position.set(4, -2, -3);
     scene.add(rimYellow);
 
@@ -113,27 +113,28 @@ export function CarModelViewer() {
     const pivot = new THREE.Group();
     scene.add(pivot);
 
-    // Static default orientation: heroic 3/4 front angle
-    let targetRotY = -Math.PI * 0.35; // ~-63 deg front three-quarter view
-    let targetRotX = 0.12;           // slight downward tilt for roof/cockpit view
+    // Initial 3/4 front isometric hero angle
+    // (Mercedes AMG GT3 front is along +X, so turning around Y shows front grille and side livery)
+    let targetRotY = -Math.PI * 0.28; // ~-50 deg front three-quarter view
+    let targetRotX = 0.12;           // slight downward pitch
     let currentRotY = targetRotY;
     let currentRotX = targetRotX;
 
     pivot.rotation.y = currentRotY;
     pivot.rotation.x = currentRotX;
 
-    let modelMaxDim = 76.0;
+    let modelMaxDim = 4.65;
 
     const applyOptimalScale = () => {
       const isMobile = window.innerWidth < 768;
-      // Large, bold, heroic scale that fits comfortably in the viewport
+      // Scale boldly to fill the Hero viewport prominently
       const targetSize = isMobile ? 3.0 : 3.7;
       pivot.scale.setScalar(targetSize / (modelMaxDim || 1));
     };
 
     // Load Model
     const loader = new GLTFLoader();
-    const modelUrl = "/kralzfiller-oxeontrocollecto-xsr-oprettorium/source/car.glb";
+    const modelUrl = "/mercedes-amg-gt3-red-bull-racing/source/mercedes_benz_amg_gt3_red_bull.glb";
 
     loader.load(
       modelUrl,
@@ -150,7 +151,7 @@ export function CarModelViewer() {
         modelMaxDim = Math.max(size.x, size.y, size.z);
         applyOptimalScale();
 
-        // Preserve textures and enhance materials with realistic reflections
+        // Preserve all native materials, textures, and clearcoat exactly as authored
         gltf.scene.traverse((node) => {
           if ((node as THREE.Mesh).isMesh) {
             const mesh = node as THREE.Mesh;
@@ -162,40 +163,17 @@ export function CarModelViewer() {
               : [mesh.material];
 
             materials.forEach((mat) => {
-              if (!mat || !(mat instanceof THREE.MeshStandardMaterial)) return;
-
-              // Ensure baseColor texture encoding is vibrant sRGB
-              if (mat.map) {
-                mat.map.colorSpace = THREE.SRGBColorSpace;
-                mat.map.needsUpdate = true;
-              }
-
-              const name = (mat.name || "").toLowerCase();
-
-              // Wheels, brake calipers, and metallic components
-              if (
-                name.includes("wheel") ||
-                name.includes("caliper") ||
-                name.includes("rim")
-              ) {
-                mat.metalness = 0.7;
-                mat.roughness = 0.22;
-                mat.envMapIntensity = 1.8;
-              }
-              // Carbon fiber components
-              else if (name.includes("carbon")) {
-                mat.metalness = 0.15;
-                mat.roughness = 0.35;
+              if (!mat) return;
+              if (mat instanceof THREE.MeshStandardMaterial) {
+                // Ensure sRGB color space for textures
+                if (mat.map) {
+                  mat.map.colorSpace = THREE.SRGBColorSpace;
+                  mat.map.needsUpdate = true;
+                }
+                // Subtle environment reflection boost
                 mat.envMapIntensity = 1.2;
+                mat.needsUpdate = true;
               }
-              // Exterior bodywork and aerodynamic surfaces
-              else {
-                mat.metalness = 0.35;
-                mat.roughness = 0.22;
-                mat.envMapIntensity = 1.5;
-              }
-
-              mat.needsUpdate = true;
             });
           }
         });
@@ -204,11 +182,11 @@ export function CarModelViewer() {
       },
       undefined,
       (err) => {
-        console.error("Failed to load car 3D model:", err);
+        console.error("Failed to load Mercedes AMG GT3 Red Bull 3D model:", err);
       }
     );
 
-    // Interactive pointer drag (static on release, no auto-spin)
+    // Interactive pointer drag (user can rotate 360°, stays static on release)
     let isDragging = false;
     let prevX = 0;
     let prevY = 0;
