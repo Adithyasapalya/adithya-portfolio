@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -57,8 +57,6 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
 
 export function CarModelViewer() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -132,15 +130,13 @@ export function CarModelViewer() {
       pivot.scale.setScalar(targetSize / (modelMaxDim || 4.65));
     };
 
-    // Load Model with real-time download progress tracking
+    // Load Model
     const loader = new GLTFLoader();
     const modelUrl = "/mercedes-amg-gt3-red-bull-racing/source/mercedes_benz_amg_gt3_red_bull.glb";
 
     loader.load(
       modelUrl,
       (gltf) => {
-        setIsLoading(false);
-
         // Calculate model bounding box and center exactly on origin
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const center = box.getCenter(new THREE.Vector3());
@@ -229,19 +225,9 @@ export function CarModelViewer() {
 
         pivot.add(gltf.scene);
       },
-      (xhr) => {
-        if (xhr.lengthComputable && xhr.total > 0) {
-          const pct = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
-          setLoadProgress(pct);
-        } else if (xhr.loaded > 0) {
-          // Fallback estimate for 55.38 MB file
-          const pct = Math.min(99, Math.round((xhr.loaded / 55382340) * 100));
-          setLoadProgress(pct);
-        }
-      },
+      undefined,
       (err) => {
         console.error("Failed to load Mercedes AMG GT3 Red Bull 3D model:", err);
-        setIsLoading(false);
       }
     );
 
@@ -337,25 +323,5 @@ export function CarModelViewer() {
     };
   }, []);
 
-  return (
-    <div className="car-hero-standalone" ref={containerRef}>
-      {isLoading && (
-        <div className="car-model-loader" aria-live="polite">
-          <div className="car-loader-telemetry">
-            <div className="car-loader-header">
-              <span className="car-loader-dot" />
-              <span className="car-loader-title">GT3 TELEMETRY // LOADING MODEL</span>
-              <span className="car-loader-pct mono">{loadProgress}%</span>
-            </div>
-            <div className="car-loader-bar-bg">
-              <div className="car-loader-bar-fill" style={{ width: `${loadProgress}%` }} />
-            </div>
-            <span className="car-loader-caption mono">
-              STREAMING RED BULL RACING LIVERY & AERODYNAMICS (55 MB)
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="car-hero-standalone" ref={containerRef} />;
 }
