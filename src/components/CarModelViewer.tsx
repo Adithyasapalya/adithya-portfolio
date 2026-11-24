@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 // Generate high-contrast studio reflection map with softboxes
 function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
@@ -130,8 +131,12 @@ export function CarModelViewer() {
       pivot.scale.setScalar(targetSize / (modelMaxDim || 4.65));
     };
 
-    // Load Model
+    // Load Model with DRACO decompression for 7.45 MB ultra-fast load
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("/draco/");
+
     const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
     const modelUrl = "/mercedes-amg-gt3-red-bull-racing/source/mercedes_benz_amg_gt3_red_bull.glb";
 
     loader.load(
@@ -303,6 +308,7 @@ export function CarModelViewer() {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("resize", applyOptimalScale);
 
+      dracoLoader.dispose();
       studioEnv.dispose();
 
       scene.traverse((obj) => {
