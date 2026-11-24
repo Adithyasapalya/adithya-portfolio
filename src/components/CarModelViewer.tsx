@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Volume2, VolumeX } from "lucide-react";
 
 // Generate high-contrast studio reflection map with softboxes
 function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
@@ -58,61 +57,8 @@ function createCarStudioEnvironment(renderer: THREE.WebGLRenderer): THREE.Textur
 
 export function CarModelViewer() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-
-  // Authentic Mercedes-AMG GT3 MP3 audio
-  useEffect(() => {
-    const audio = new Audio("/audio/gt3-engine-sound.mp3");
-    audio.preload = "auto";
-    audio.volume = 0.95;
-
-    const onEnded = () => setIsPlayingAudio(false);
-    const onError = () => {
-      const fallbackUrl = encodeURI(
-        "/audio/Mercedes AMG GT3 Evo Pure sound ｜ Mettler-Muller [mykL4QTbbeM].mp3"
-      );
-      if (audio.src !== fallbackUrl) {
-        audio.src = fallbackUrl;
-        audio.load();
-      } else {
-        setIsPlayingAudio(false);
-      }
-    };
-
-    audio.addEventListener("ended", onEnded);
-    audio.addEventListener("error", onError);
-    audioRef.current = audio;
-
-    return () => {
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("error", onError);
-      audio.pause();
-      audio.currentTime = 0;
-    };
-  }, []);
-
-  const toggleEngineSound = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (!audio.paused) {
-      audio.pause();
-      audio.currentTime = 0;
-      setIsPlayingAudio(false);
-    } else {
-      audio.currentTime = 0;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlayingAudio(true))
-          .catch((err) => {
-            console.error("Audio playback error:", err);
-            setIsPlayingAudio(false);
-          });
-      }
-    }
-  }, []);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -145,8 +91,7 @@ export function CarModelViewer() {
     const studioEnv = createCarStudioEnvironment(renderer);
     scene.environment = studioEnv;
 
-    // Direct Studio Lights - Calibrated for high-contrast motorsport showroom look:
-    // Low ambient prevents washing out carbon and shadows; directional key provides crisp highlights
+    // Direct Studio Lights - Calibrated for high-contrast motorsport showroom look
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.40);
     scene.add(ambientLight);
 
@@ -187,13 +132,15 @@ export function CarModelViewer() {
       pivot.scale.setScalar(targetSize / (modelMaxDim || 4.65));
     };
 
-    // Load Model
+    // Load Model with real-time download progress tracking
     const loader = new GLTFLoader();
     const modelUrl = "/mercedes-amg-gt3-red-bull-racing/source/mercedes_benz_amg_gt3_red_bull.glb";
 
     loader.load(
       modelUrl,
       (gltf) => {
+        setIsLoading(false);
+
         // Calculate model bounding box and center exactly on origin
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const center = box.getCenter(new THREE.Vector3());
@@ -282,21 +229,29 @@ export function CarModelViewer() {
 
         pivot.add(gltf.scene);
       },
-      undefined,
+      (xhr) => {
+        if (xhr.lengthComputable && xhr.total > 0) {
+          const pct = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
+          setLoadProgress(pct);
+        } else if (xhr.loaded > 0) {
+          // Fallback estimate for 55.38 MB file
+          const pct = Math.min(99, Math.round((xhr.loaded / 55382340) * 100));
+          setLoadProgress(pct);
+        }
+      },
       (err) => {
         console.error("Failed to load Mercedes AMG GT3 Red Bull 3D model:", err);
+        setIsLoading(false);
       }
     );
 
     // Interactive pointer drag (user can rotate 360°, stays static on release)
     let isDragging = false;
-    let dragDistance = 0;
     let prevX = 0;
     let prevY = 0;
 
     const onPointerDown = (e: PointerEvent) => {
       isDragging = true;
-      dragDistance = 0;
       prevX = e.clientX;
       prevY = e.clientY;
     };
@@ -305,7 +260,6 @@ export function CarModelViewer() {
       if (!isDragging) return;
       const deltaX = e.clientX - prevX;
       const deltaY = e.clientY - prevY;
-      dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
       prevX = e.clientX;
       prevY = e.clientY;
 
@@ -314,12 +268,8 @@ export function CarModelViewer() {
       targetRotX = Math.max(-0.16, Math.min(0.20, targetRotX));
     };
 
-    const onPointerUp = (e: PointerEvent) => {
+    const onPointerUp = () => {
       isDragging = false;
-      // Quick click/tap on car canvas triggers real GT3 engine audio
-      if (dragDistance < 6 && !(e.target as HTMLElement)?.closest(".car-sound-toggle")) {
-        toggleEngineSound();
-      }
     };
 
     const domEl = renderer.domElement;
@@ -385,22 +335,27 @@ export function CarModelViewer() {
         container.removeChild(domEl);
       }
     };
-  }, [toggleEngineSound]);
+  }, []);
 
   return (
     <div className="car-hero-standalone" ref={containerRef}>
-      {/* Floating minimalist sound toggle Easter egg */}
-      <button
-        type="button"
-        className={`car-sound-toggle ${isPlayingAudio ? "active" : ""}`}
-        onClick={toggleEngineSound}
-        aria-label="Toggle Mercedes-AMG GT3 Engine Audio"
-        title="Click to hear the real twin-turbo V8 Mercedes-AMG GT3 exhaust"
-      >
-        {isPlayingAudio ? <VolumeX size={13} /> : <Volume2 size={13} />}
-        <span>{isPlayingAudio ? "GT3 EXHAUST [ON]" : "GT3 EXHAUST"}</span>
-        {isPlayingAudio && <span className="sound-pulse-dot" />}
-      </button>
+      {isLoading && (
+        <div className="car-model-loader" aria-live="polite">
+          <div className="car-loader-telemetry">
+            <div className="car-loader-header">
+              <span className="car-loader-dot" />
+              <span className="car-loader-title">GT3 TELEMETRY // LOADING MODEL</span>
+              <span className="car-loader-pct mono">{loadProgress}%</span>
+            </div>
+            <div className="car-loader-bar-bg">
+              <div className="car-loader-bar-fill" style={{ width: `${loadProgress}%` }} />
+            </div>
+            <span className="car-loader-caption mono">
+              STREAMING RED BULL RACING LIVERY & AERODYNAMICS (55 MB)
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

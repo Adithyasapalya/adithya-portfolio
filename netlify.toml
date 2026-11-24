@@ -20,12 +20,6 @@
     Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/*.mp3"
-  [headers.values]
-    Content-Type = "audio/mpeg"
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
   for = "/*.pdf"
   [headers.values]
     Content-Type = "application/pdf"
